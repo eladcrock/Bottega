@@ -53,9 +53,9 @@ function calculateTip() {
         <p>$${bussTip.toFixed(2)} to Busser</p>
         <p>$${sommTip.toFixed(2)} to Somm</p>
         <p>$${buffTip.toFixed(2)} to Porter</p>
-        <p>$${runTip.toFixed(2)} to Runner(s)</p>
+        <p>$${runTip.toFixed(2)} to Runner</p>
         <p>$${barTip.toFixed(2)} to Bar</p>
-        <p>$${hostTip.toFixed(2)} to Host(s)</p>
+        <p>$${hostTip.toFixed(2)} to Host</p>
         <p>Server tips: $${netTip.toFixed(2)}</p>
         <p>Total tipout: $${totalTip.toFixed(2)}</p>
         <p></p>
