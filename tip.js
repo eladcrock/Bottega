@@ -58,5 +58,8 @@ function calculateTip() {
         <p>$${hostTip.toFixed(2)} to Host(s)</p>
         <p>Server tips: $${netTip.toFixed(2)}</p>
         <p>Total tipout: $${totalTip.toFixed(2)}</p>
+        <p></p>
+            <p>Keep up the great work!</p>
+
     `;
 }
