@@ -48,9 +48,7 @@ function calculateTip() {
     totalTip = gratuity - netTip;
 
     document.getElementById('output').innerHTML = `
-        <p>Based on a NET of $${sales.toFixed(2)}</p>
-        <p>Wine sales of $${wine.toFixed(2)},</p>
-        <p>with ${host_total} Hosts, ${runner_total} Runners,</p>
+        <p>Based on Values Provided</p>
         <p>You will tip-out:</p>
         <p>$${bussTip.toFixed(2)} to Busser</p>
         <p>$${sommTip.toFixed(2)} to Somm</p>
