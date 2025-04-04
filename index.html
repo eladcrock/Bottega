@@ -11,19 +11,19 @@
         <h1>Tip Calculator App</h1>
         <form id="tipForm">
             <label for="totalTips">Enter Total Tips:</label>
-            <input type="number" id="totalTips"   inputmode="decimal" pattern="[0-9]*\.?[0-9]*"required>
+            <input type="number" id="totalTips"   inputmode="decimal" pattern="[0-9]*\.?[0-9]*"required  autocomplete="off" enterkeyhint="next">
 
             <label for="netSales">Enter NET sales:</label>
-            <input type="text" id="netSales"  inputmode="decimal"  pattern="[0-9]*\.?[0-9]*" required>
+            <input type="text" id="netSales"  inputmode="decimal"  pattern="[0-9]*\.?[0-9]*" required  autocomplete="off" enterkeyhint="next">
 
             <label for="wineSales">Enter Wine sales:</label>
-            <input type="text" id="wineSales"   inputmode="decimal" pattern="[0-9]*\.?[0-9]*"required>
+            <input type="text" id="wineSales"   inputmode="decimal" pattern="[0-9]*\.?[0-9]*"required  autocomplete="off"enterkeyhint="next">
 
             <label for="numHosts">Enter Number of Hosts:</label>
-            <input type="text" id="numHosts"   inputmode="decimal" pattern="[0-9]*\.?[0-9]*" required>
+            <input type="text" id="numHosts"   inputmode="decimal" pattern="[0-9]*\.?[0-9]*" required  autocomplete="off" enterkeyhint="next">
 
             <label for="numRunners">Enter Number of Runners:</label>
-            <input type="text" id="numRunners"  inputmode="decimal"  pattern="[0-9]*\.?[0-9]*" required>
+            <input type="text" id="numRunners"  inputmode="decimal"  pattern="[0-9]*\.?[0-9]*" required  autocomplete="off"enterkeyhint="next">
 
             <button type="button" onclick="calculateTip()">Calculate</button>
         </form>
