@@ -11,19 +11,19 @@
         <h1>Tip Calculator App</h1>
         <form id="tipForm">
             <label for="totalTips">Enter Total Tips:</label>
-            <input type="number" id="totalTips"required>
+            <input type="number" id="totalTips"   pattern="[0-9]*\.?[0-9]*"required>
 
             <label for="netSales">Enter NET sales:</label>
-            <input type="number" id="netSales" required>
+            <input type="number" id="netSales"   pattern="[0-9]*\.?[0-9]*" required>
 
             <label for="wineSales">Enter Wine sales:</label>
-            <input type="number" id="wineSales" required>
+            <input type="number" id="wineSales"   pattern="[0-9]*\.?[0-9]*"required>
 
             <label for="numHosts">Enter Number of Hosts:</label>
-            <input type="number" id="numHosts"  required>
+            <input type="number" id="numHosts"   pattern="[0-9]*\.?[0-9]*" required>
 
             <label for="numRunners">Enter Number of Runners:</label>
-            <input type="number" id="numRunners"  required>
+            <input type="number" id="numRunners"   pattern="[0-9]*\.?[0-9]*" required>
 
             <button type="button" onclick="calculateTip()">Calculate</button>
         </form>
