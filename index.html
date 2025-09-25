@@ -80,11 +80,12 @@
                             <h3>Sign In</h3>
                             
                             <div id="loginError" class="error-message hidden">
-                                <div class="error-icon">⚠️</div>
+                                <div class="error-icon">📧</div>
                                 <div class="error-content">
-                                    <h4>Can't sign in?</h4>
-                                    <p><strong>Check your email</strong> for a confirmation link from Supabase before signing in.</p>
-                                    <p>New accounts must verify their email address first.</p>
+                                    <h4>Email Confirmation Required</h4>
+                                    <p><strong>Check your email inbox</strong> for a confirmation message from Supabase.</p>
+                                    <p>You must click the confirmation link before you can sign in.</p>
+                                    <p><small>Don't see it? Check your spam folder.</small></p>
                                 </div>
                             </div>
                             
@@ -92,6 +93,7 @@
                                 <input type="email" id="loginEmail" placeholder="Email" required>
                                 <input type="password" id="loginPassword" placeholder="Password" required>
                                 <button type="submit" class="btn btn-primary btn-large">Sign In</button>
+                                <button type="button" class="btn btn-secondary" onclick="debugUser()" style="margin-top: 0.5rem;">Debug User Status</button>
                             </div>
                             <p class="toggle-auth">Don't have an account? <a href="#" onclick="toggleAuth()">Sign up</a></p>
                         </form>
@@ -103,9 +105,10 @@
                             <div id="registrationSuccess" class="success-message hidden">
                                 <div class="success-icon">🎉</div>
                                 <div class="success-content">
-                                    <h4>Welcome to Tip Tracker Pro!</h4>
-                                    <p>Please check your email for a confirmation link <strong>from Supabase</strong> to verify your account.</p>
-                                    <p>Once verified, you can sign in and start tracking your tips!</p>
+                                    <h4>Account Created Successfully!</h4>
+                                    <p><strong>IMPORTANT:</strong> Check your email for a confirmation link from Supabase.</p>
+                                    <p>You must click the confirmation link before you can sign in.</p>
+                                    <p><strong>After confirming:</strong> Come back here and use the "Sign In" form.</p>
                                 </div>
                             </div>
                             

@@ -160,23 +160,36 @@ async function handleLogin(e) {
     // Hide any previous error message
     document.getElementById('loginError').classList.add('hidden');
     
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-    });
-    
-    if (error) {
-        // Show email confirmation error message for common auth issues
-        if (error.message.includes('email') || error.message.includes('confirm') || 
-            error.message.includes('verify') || error.message.includes('Invalid')) {
-            document.getElementById('loginError').classList.remove('hidden');
-        } else {
-            alert('Login failed: ' + error.message);
+    try {
+        console.log('Attempting to sign in with email:', email);
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+        
+        if (error) {
+            console.error('Login error:', error);
+            console.error('Full error details:', JSON.stringify(error, null, 2));
+            
+            // Show specific error messages
+            if (error.message.includes('Invalid login credentials')) {
+                // This is likely due to unconfirmed email
+                document.getElementById('loginError').classList.remove('hidden');
+            } else if (error.message.includes('email') || error.message.includes('confirm') || 
+                       error.message.includes('verify')) {
+                document.getElementById('loginError').classList.remove('hidden');
+            } else {
+                alert('Login failed: ' + error.message);
+            }
+            return;
         }
-        return;
+        
+        console.log('Login successful:', data);
+        // currentUser will be set by the auth state change listener
+    } catch (networkError) {
+        console.error('Network error during login:', networkError);
+        alert('Connection failed. Please check your internet connection and try again. \n\nError: ' + networkError.message);
     }
-    
-    // currentUser will be set by the auth state change listener
 }
 
 async function handleRegister(e) {
@@ -185,24 +198,33 @@ async function handleRegister(e) {
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     
-    const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-            data: {
-                name: name
+    try {
+        console.log('Attempting to register with email:', email);
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    name: name
+                }
             }
+        });
+        
+        if (error) {
+            console.error('Registration error:', error);
+            alert('Registration failed: ' + error.message);
+            return;
         }
-    });
-    
-    if (error) {
-        alert('Registration failed: ' + error.message);
-        return;
+        
+        console.log('Registration successful:', data);
+        // Show success message
+        document.getElementById('registrationForm').classList.add('hidden');
+        document.getElementById('registrationSuccess').classList.remove('hidden');
+        
+    } catch (networkError) {
+        console.error('Network error during registration:', networkError);
+        alert('Connection failed. Please check your internet connection and try again. \n\nError: ' + networkError.message);
     }
-    
-    // Show success message instead of alert
-    document.getElementById('registrationForm').classList.add('hidden');
-    document.getElementById('registrationSuccess').classList.remove('hidden');
 }
 
 async function logout() {
