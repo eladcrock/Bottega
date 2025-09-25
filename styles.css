@@ -242,7 +242,7 @@ body {
 
 .auth-container {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 2rem;
     align-items: start;
     max-width: 1000px;
@@ -262,36 +262,6 @@ body {
     border-radius: 12px;
     background: #f8f9ff;
     border: 1px solid #e2e8f0;
-}
-
-.divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    margin: 2rem 0;
-    min-height: 300px;
-}
-
-.divider span {
-    background: #fff;
-    padding: 0.75rem 1.25rem;
-    border-radius: 50px;
-    color: #999;
-    font-weight: 600;
-    font-size: 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.divider::before {
-    content: '';
-    position: absolute;
-    width: 2px;
-    height: 150px;
-    background: linear-gradient(to bottom, transparent, #e0e0e0, transparent);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
 .features-list {
@@ -475,6 +445,40 @@ body {
 
 .success-content strong {
     color: #0c5460;
+}
+
+/* Error Message */
+.error-message {
+    background: #f8d7da;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 1px solid #f5c6cb;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.error-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.error-content h4 {
+    color: #721c24;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.error-content p {
+    color: #721c24;
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.error-content strong {
+    color: #491217;
 }
 
 .toggle-auth a {
@@ -951,20 +955,6 @@ body {
         grid-template-columns: 1fr;
         gap: 1.5rem;
         padding: 0 1rem;
-    }
-    
-    .divider {
-        min-height: 100px;
-        margin: 1rem 0;
-    }
-    
-    .divider::before {
-        height: 50px;
-    }
-    
-    .divider span {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
     }
     
     .welcome-header h1 {

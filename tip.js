@@ -137,9 +137,13 @@ function toggleAuth() {
     const registerForm = document.getElementById('registerForm');
     const registrationSuccess = document.getElementById('registrationSuccess');
     const registrationFormDiv = document.getElementById('registrationForm');
+    const loginError = document.getElementById('loginError');
     
     loginForm.classList.toggle('hidden');
     registerForm.classList.toggle('hidden');
+    
+    // Hide error messages when switching forms
+    loginError.classList.add('hidden');
     
     // Reset registration form when switching
     if (!registerForm.classList.contains('hidden')) {
@@ -153,13 +157,22 @@ async function handleLogin(e) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
+    // Hide any previous error message
+    document.getElementById('loginError').classList.add('hidden');
+    
     const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
         password
     });
     
     if (error) {
-        alert('Login failed: ' + error.message);
+        // Show email confirmation error message for common auth issues
+        if (error.message.includes('email') || error.message.includes('confirm') || 
+            error.message.includes('verify') || error.message.includes('Invalid')) {
+            document.getElementById('loginError').classList.remove('hidden');
+        } else {
+            alert('Login failed: ' + error.message);
+        }
         return;
     }
     
