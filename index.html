@@ -3,36 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tip Calculator App</title>
+    <title>Tip Tracker Pro</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Tip Calculator App</h1>
-        <form id="tipForm">
-            <label for="totalTips">Enter Total Tips:</label>
-            <input type="number" id="totalTips"   inputmode="decimal"   step="0.01" pattern="[0-9]*\.?[0-9]*"required  autocomplete="off" enterkeyhint="next">
+    <!-- Navigation -->
+    <nav id="navbar" class="navbar hidden">
+        <div class="nav-container">
+            <span class="nav-brand">Tip Tracker Pro</span>
+            <div class="nav-menu">
+                <span id="userGreeting" class="nav-item"></span>
+                <button class="nav-item nav-link" onclick="showView('calculator')">Calculator</button>
+                <button class="nav-item nav-link" onclick="showView('dashboard')">Dashboard</button>
+                <button class="nav-item nav-link" onclick="showView('history')">History</button>
+                <button class="nav-item nav-link" onclick="showView('analytics')">Analytics</button>
+                <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="nav-item nav-coffee">☕</a>
+                <button class="nav-item nav-link" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
 
-            <label for="netSales">Enter NET sales:</label>
-            <input type="number" id="netSales"  inputmode="decimal"   step="0.01" pattern="[0-9]*\.?[0-9]*" required  autocomplete="off" enterkeyhint="next">
+    <!-- Welcome/Login View -->
+    <div id="welcomeView" class="view">
+        <div class="container">
+            <div class="welcome-header">
+                <h1>🍽️ Tip Tracker Pro</h1>
+                <p class="subtitle">Track your tips, analyze your earnings, optimize your income</p>
+            </div>
 
-            <label for="wineSales">Enter Wine sales:</label>
-            <input type="number" id="wineSales"   inputmode="decimal"   step="0.01"pattern="[0-9]*\.?[0-9]*"required  autocomplete="off"enterkeyhint="next">
+            <div class="auth-container">
+                <div class="guest-section">
+                    <h2>Quick Calculate (Guest Mode)</h2>
+                    <p>Use our tip calculator without signing up - perfect for one-time calculations.</p>
+                    <button class="btn btn-secondary" onclick="showView('calculator')">Use as Guest</button>
+                </div>
 
-            <label for="numHosts">Enter Number of Hosts:</label>
-            <input type="number" id="numHosts"   inputmode="decimal"   step="1" pattern="[0-9]*\.?[0-9]*" required  autocomplete="off" enterkeyhint="next">
+                <div class="divider">
+                    <span>OR</span>
+                </div>
 
-            <label for="numRunners">Enter Number of Runners:</label>
-            <input type="number" id="numRunners"  inputmode="decimal"   step="1" pattern="[0-9]*\.?[0-9]*" required  autocomplete="off"enterkeyhint="next">
+                <div class="user-section">
+                    <h2>Unlock Pro Features</h2>
+                    <div class="features-list">
+                        <div class="feature">✅ Log and track all your tips</div>
+                        <div class="feature">📊 View earnings analytics and trends</div>
+                        <div class="feature">📅 Calendar view with date ranges</div>
+                        <div class="feature">⏰ Track hours worked</div>
+                        <div class="feature">📝 Add notes to each shift</div>
+                        <div class="feature">💰 Pay period summaries</div>
+                    </div>
+                    
+                    <div class="auth-forms">
+                        <!-- Login Form -->
+                        <form id="loginForm" class="auth-form">
+                            <h3>Sign In</h3>
+                            <div class="form-fields">
+                                <input type="email" id="loginEmail" placeholder="Email" required>
+                                <input type="password" id="loginPassword" placeholder="Password" required>
+                                <button type="submit" class="btn btn-primary btn-large">Sign In</button>
+                            </div>
+                            <p class="toggle-auth">Don't have an account? <a href="#" onclick="toggleAuth()">Sign up</a></p>
+                        </form>
 
-<button type="button" style="font-size: 18px; font-weight: bold;" onclick="calculateTip()">Calculate</button>
-        </form>
-
-        <div id="results" class="hidden">
-            <h2>Results</h2>
-            <div id="output"></div>
+                        <!-- Register Form -->
+                        <form id="registerForm" class="auth-form hidden">
+                            <h3>Create Account</h3>
+                            
+                            <div id="registrationSuccess" class="success-message hidden">
+                                <div class="success-icon">🎉</div>
+                                <div class="success-content">
+                                    <h4>Welcome to Tip Tracker Pro!</h4>
+                                    <p>Please check your email for a confirmation link <strong>from Supabase</strong> to verify your account.</p>
+                                    <p>Once verified, you can sign in and start tracking your tips!</p>
+                                </div>
+                            </div>
+                            
+                            <div id="registrationForm" class="registration-form-fields">
+                                <div class="form-fields">
+                                    <input type="text" id="registerName" placeholder="Username" required>
+                                    <input type="email" id="registerEmail" placeholder="Email" required>
+                                    <input type="password" id="registerPassword" placeholder="Password" required>
+                                    <button type="submit" class="btn btn-primary btn-large">Create Account</button>
+                                </div>
+                                
+                                <div class="form-extras">
+                                    <div class="privacy-notice">
+                                        <div class="privacy-icon">🔐</div>
+                                        <div class="privacy-text">
+                                            <h4>Your Privacy is Protected</h4>
+                                            <p>• Your tip data is completely private and only visible to you</p>
+                                            <p>• We never share or sell your information to third parties</p>
+                                            <p>• All data is encrypted and securely stored</p>
+                                            <p>• You can delete your account and data at any time</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="support-cta">
+                                        <p>This app is built, maintained, and hosted as a personal project.</p>
+                                        <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="btn btn-coffee">
+                                            ☕ Buy Creator a Coffee
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p class="toggle-auth">Already have an account? <a href="#" onclick="toggleAuth()">Sign in</a></p>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Calculator View -->
+    <div id="calculatorView" class="view hidden">
+        <div class="container">
+            <div class="view-header">
+                <h1>Tip Calculator</h1>
+                <div id="guestPrompt" class="guest-cta hidden">
+                    <p>💡 Want to save this calculation? <a href="#" onclick="showView('welcome')">Create an account</a> to track your tips over time!</p>
+                </div>
+            </div>
+
+            <form id="tipForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="shiftDate">Date:</label>
+                        <input type="date" id="shiftDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hoursWorked">Hours Worked:</label>
+                        <input type="number" id="hoursWorked" step="0.25" placeholder="8.0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="totalTips">Total Tips:</label>
+                    <input type="number" id="totalTips" inputmode="decimal" step="0.01" pattern="[0-9]*\.?[0-9]*" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="netSales">NET Sales:</label>
+                    <input type="number" id="netSales" inputmode="decimal" step="0.01" pattern="[0-9]*\.?[0-9]*" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="wineSales">Wine Sales:</label>
+                    <input type="number" id="wineSales" inputmode="decimal" step="0.01" pattern="[0-9]*\.?[0-9]*" required autocomplete="off">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numHosts">Number of Hosts:</label>
+                        <input type="number" id="numHosts" step="1" pattern="[0-9]*" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="numRunners">Number of Runners:</label>
+                        <input type="number" id="numRunners" step="1" pattern="[0-9]*" required autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes (optional):</label>
+                    <textarea id="notes" rows="3" placeholder="Any notes about this shift..."></textarea>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-large" onclick="calculateTip()">Calculate Tips</button>
+            </form>
+
+            <div id="results" class="results hidden">
+                <div class="results-header">
+                    <button class="btn-back" onclick="clearResults()" title="Back to Calculator">← Back</button>
+                    <h2>Results</h2>
+                </div>
+                <div id="output"></div>
+                <div id="savePrompt" class="save-prompt hidden">
+                    <button class="btn btn-secondary" onclick="saveTipEntry()">💾 Save This Entry</button>
+                </div>
+                <div class="results-actions">
+                    <button class="btn btn-secondary" onclick="clearResults()">Calculate Another</button>
+                    <div id="guestBackPrompt" class="guest-back-cta hidden">
+                        <button class="btn btn-primary" onclick="showView('welcome')">Back to Home</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboardView" class="view hidden">
+        <div class="container">
+            <h1>Dashboard</h1>
+            <div id="dashboardContent">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>This Week</h3>
+                        <div class="stat-value" id="weeklyTotal">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>This Month</h3>
+                        <div class="stat-value" id="monthlyTotal">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Average per Hour</h3>
+                        <div class="stat-value" id="avgPerHour">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Best Day</h3>
+                        <div class="stat-value" id="bestDay">-</div>
+                    </div>
+                </div>
+
+                <div class="pay-period-section">
+                    <div class="section-header">
+                        <h2>Pay Period Summary</h2>
+                        <div class="coffee-support">
+                            <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="coffee-link">
+                                <span class="coffee-icon">☕</span>
+                                <span class="coffee-text">Buy me a coffee</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="pay-period-controls">
+                        <div class="control-group">
+                            <label for="payPeriodSelect">Period:</label>
+                            <select id="payPeriodSelect" class="select-styled">
+                                <option value="current">Current Period</option>
+                                <option value="previous">Previous Period</option>
+                            </select>
+                        </div>
+                        <div class="pay-period-dates">
+                            <span id="payPeriodDates"></span>
+                        </div>
+                    </div>
+                    <div class="pay-period-total" id="payPeriodTotal">$0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History View -->
+    <div id="historyView" class="view hidden">
+        <div class="container">
+            <h1>Tip History</h1>
+            <div class="history-controls">
+                <div class="section-header">
+                    <h2>Filter History</h2>
+                    <div class="coffee-support">
+                        <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="coffee-link">
+                            <span class="coffee-icon">☕</span>
+                            <span class="coffee-text">Support</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="date-range-selector">
+                    <div class="control-group">
+                        <label>Date Range:</label>
+                        <div class="date-inputs">
+                            <input type="date" id="startDate" class="date-input">
+                            <span class="date-separator">to</span>
+                            <input type="date" id="endDate" class="date-input">
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="filterHistory()">Filter</button>
+                </div>
+            </div>
+            <div id="historyList" class="history-list">
+                <!-- History entries will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics View -->
+    <div id="analyticsView" class="view hidden">
+        <div class="container">
+            <div class="section-header">
+                <h1>Analytics</h1>
+                <div class="coffee-support">
+                    <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="coffee-link">
+                        <span class="coffee-icon">☕</span>
+                        <span class="coffee-text">Enjoying the insights?</span>
+                    </a>
+                </div>
+            </div>
+            <div class="charts-container">
+                <div class="chart-section">
+                    <h2>Tips by Day of Week</h2>
+                    <canvas id="dayChart"></canvas>
+                </div>
+                <div class="chart-section">
+                    <h2>Tips Over Time</h2>
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="tip.js"></script>
 </body>
 </html>
