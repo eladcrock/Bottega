@@ -754,6 +754,12 @@ async function deleteEntry(entryId) {
             await loadUserData(); // Refresh data
             loadHistory(); // Refresh the list
             
+            // Refresh analytics if currently viewing them
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if (currentView && currentView.id === 'analytics') {
+                loadAnalytics();
+            }
+            
         } catch (error) {
             console.error('Error deleting entry:', error);
             alert('Failed to delete entry: ' + error.message);
