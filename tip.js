@@ -78,10 +78,22 @@ function setupEventListeners() {
     if (payPeriodSelect) {
         payPeriodSelect.addEventListener('change', updatePayPeriodSummary);
     }
+    
+    // Quick entry form
+    const quickEntryForm = document.getElementById('quickEntryForm');
+    if (quickEntryForm) {
+        quickEntryForm.addEventListener('submit', handleQuickEntry);
+        
+        // Set today's date as default
+        const quickDate = document.getElementById('quickDate');
+        if (quickDate) {
+            quickDate.value = new Date().toISOString().split('T')[0];
+        }
+    }
 }
 
 // View Management
-function showView(viewName) {
+async function showView(viewName) {
     // Hide all views
     const views = document.querySelectorAll('.view');
     views.forEach(view => view.classList.add('hidden'));
@@ -107,12 +119,15 @@ function showView(viewName) {
                 setupCalculatorView();
                 break;
             case 'dashboard':
+                await loadUserData(); // Refresh data
                 loadDashboard();
                 break;
             case 'history':
+                await loadUserData(); // Refresh data
                 loadHistory();
                 break;
             case 'analytics':
+                await loadUserData(); // Refresh data
                 loadAnalytics();
                 break;
         }
@@ -194,7 +209,7 @@ async function handleLogin(e) {
 
 async function handleRegister(e) {
     e.preventDefault();
-    const name = document.getElementById('registerName').value;
+    const name = document.getElementById('registerName').value.trim();
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     
@@ -204,8 +219,9 @@ async function handleRegister(e) {
             email,
             password,
             options: {
+                emailRedirectTo: 'https://eladcrock.github.io/Bottega',
                 data: {
-                    name: name
+                    name: name || email.split('@')[0] // Use name if provided, otherwise use email prefix
                 }
             }
         });
@@ -227,6 +243,35 @@ async function handleRegister(e) {
     }
 }
 
+async function resendConfirmation() {
+    const email = document.getElementById('loginEmail').value;
+    if (!email) {
+        alert('Please enter your email address first.');
+        return;
+    }
+    
+    try {
+        const { error } = await supabaseClient.auth.resend({
+            type: 'signup',
+            email: email,
+            options: {
+                emailRedirectTo: 'https://eladcrock.github.io/Bottega'
+            }
+        });
+        
+        if (error) {
+            console.error('Error resending confirmation:', error);
+            alert('Failed to resend confirmation email: ' + error.message);
+            return;
+        }
+        
+        alert('Confirmation email sent! Please check your inbox and spam folder.');
+    } catch (networkError) {
+        console.error('Network error during resend:', networkError);
+        alert('Connection failed. Please try again later.');
+    }
+}
+
 async function logout() {
     const { error } = await supabaseClient.auth.signOut();
     if (error) {
@@ -235,8 +280,81 @@ async function logout() {
     // currentUser will be cleared by auth state change listener
 }
 
+async function handleQuickEntry(e) {
+    e.preventDefault();
+    
+    // Check if user is logged in
+    if (!currentUser) {
+        alert('Please sign in to save tip entries.');
+        showView('welcome');
+        return;
+    }
+    
+    const date = document.getElementById('quickDate').value;
+    const tips = parseFloat(document.getElementById('quickTips').value);
+    const hours = parseFloat(document.getElementById('quickHours').value) || null;
+    const notes = document.getElementById('quickNotes').value.trim();
+    
+    if (!date || !tips || tips <= 0) {
+        alert('Please enter a valid date and tip amount.');
+        return;
+    }
+    
+    try {
+        // Create a simplified tip entry
+        const tipEntry = {
+            user_id: currentUser.id,
+            date: date,
+            total_tips: tips,
+            hours_worked: hours,
+            notes: notes,
+            // Simple breakdown for quick entries
+            breakdown: {
+                netTip: tips,
+                totalTips: tips,
+                busserTip: 0,
+                porterTip: 0,
+                hourlyRate: hours ? (tips / hours) : 0
+            },
+            // Default values for required fields
+            net_sales: 0,
+            wine_sales: 0,
+            num_hosts: 0,
+            num_runners: 0
+        };
+        
+        // Save to Supabase
+        const { data, error } = await supabaseClient
+            .from('tip_entries')
+            .insert([tipEntry])
+            .select();
+        
+        if (error) {
+            console.error('Error saving quick entry:', error);
+            alert('Failed to save tip entry: ' + error.message);
+            return;
+        }
+        
+        // Success feedback
+        alert('✅ Tip entry saved successfully!');
+        
+        // Clear the form
+        document.getElementById('quickEntryForm').reset();
+        document.getElementById('quickDate').value = new Date().toISOString().split('T')[0];
+        
+        // Reload user data to reflect the new entry
+        await loadUserData();
+        
+    } catch (error) {
+        console.error('Error in handleQuickEntry:', error);
+        alert('Failed to save tip entry. Please try again.');
+    }
+}
+
 async function loadUserData() {
     if (!currentUser) return;
+    
+    console.log('Loading user data for:', currentUser.email);
     
     const { data, error } = await supabaseClient
         .from('tip_entries')
@@ -251,6 +369,7 @@ async function loadUserData() {
     }
     
     tipEntries = data || [];
+    console.log('Loaded tip entries:', tipEntries.length, 'entries');
 }
 
 async function saveUserData() {
@@ -753,143 +872,6 @@ function createTimeChart() {
             }
         }
     });
-}
-
-// Tip Calculator (Enhanced)
-function calculateTip() {
-    const totalTips = parseFloat(document.getElementById('totalTips').value) || 0;
-    const netSales = parseFloat(document.getElementById('netSales').value) || 0;
-    const wineSales = parseFloat(document.getElementById('wineSales').value) || 0;
-    const numHosts = parseInt(document.getElementById('numHosts').value) || 0;
-    const numRunners = parseInt(document.getElementById('numRunners').value) || 0;
-
-    const BUSSER_PERCENT = 0.16;
-    const PORTER_PERCENT = 0.01;
-    const SOLO_PERCENT = 0.045;
-    const DUO_PERCENT = 0.07;
-    const TRIO_PERCENT = 0.09;
-    const WINE_PERCENT = 0.03;
-    const KITCHEN_TIP = 5;
-
-    let buffTip = 0, hostTip = 0, barTip = 0, totalTip = 0,
-        bussTip, sommTip = 0, runTip = 0, kitchenTip = 0;
-
-    if (netSales < 2500) {
-        buffTip = netSales * PORTER_PERCENT;
-    } else {
-        buffTip = 25;
-    }
-
-    if (wineSales > 0) {
-        sommTip = wineSales * WINE_PERCENT;
-    }
-
-    if (numRunners === 3) {
-        runTip = totalTips * TRIO_PERCENT;
-    } else if (numRunners === 2) {
-        runTip = totalTips * DUO_PERCENT;
-    } else if (numRunners === 1) {
-        runTip = totalTips * SOLO_PERCENT;
-    }
-
-    if (numHosts === 3) {
-        hostTip = totalTips * TRIO_PERCENT;
-    } else if (numHosts === 2) {
-        hostTip = totalTips * DUO_PERCENT;
-    } else if (numHosts === 1) {
-        hostTip = totalTips * SOLO_PERCENT;
-    }
-
-    bussTip = totalTips * BUSSER_PERCENT;
-    barTip = totalTips * DUO_PERCENT;
-
-    if (totalTips > 0) {
-        kitchenTip = KITCHEN_TIP;
-    }
-
-    const netTip = totalTips - bussTip - sommTip - hostTip - runTip - buffTip - barTip - kitchenTip;
-    totalTip = totalTips - netTip;
-
-    // Store calculation for potential saving
-    lastCalculation = {
-        date: document.getElementById('shiftDate').value,
-        hoursWorked: parseFloat(document.getElementById('hoursWorked').value) || 0,
-        notes: document.getElementById('notes').value,
-        totalTips,
-        netSales,
-        wineSales,
-        numHosts,
-        numRunners,
-        breakdown: {
-            bussTip,
-            sommTip,
-            buffTip,
-            runTip,
-            barTip,
-            hostTip,
-            kitchenTip,
-            netTip,
-            totalTip
-        }
-    };
-
-    document.getElementById('output').innerHTML = `
-        <p>Based on a NET of $${netSales.toFixed(2)}</p>
-        <p>Wine sales of $${wineSales.toFixed(2)},</p>
-        <p>with ${numHosts} Hosts, ${numRunners} Runners,</p>
-        <p>You will tip-out:</p>
-        <p>$${bussTip.toFixed(2)} to Busser</p>
-        <p>$${sommTip.toFixed(2)} to Somm</p>
-        <p>$${buffTip.toFixed(2)} to Porter</p>
-        <p>$${runTip.toFixed(2)} to Runner(s)</p>
-        <p>$${barTip.toFixed(2)} to Bar</p>
-        <p>$${hostTip.toFixed(2)} to Host(s)</p>
-        <p>$${kitchenTip.toFixed(2)} to Kitchen</p>
-        <p><strong>Server tips: $${netTip.toFixed(2)}</strong></p>
-        <p>Total tipout: $${totalTip.toFixed(2)}</p>
-    `;
-
-    document.getElementById('results').classList.remove('hidden');
-    
-    // Show appropriate navigation options
-    if (currentUser) {
-        document.getElementById('savePrompt').classList.remove('hidden');
-        document.getElementById('guestBackPrompt').classList.add('hidden');
-    } else {
-        document.getElementById('guestBackPrompt').classList.remove('hidden');
-    }
-}
-
-function clearResults() {
-    // Hide results and clear form if desired
-    document.getElementById('results').classList.add('hidden');
-    
-    // Reset form to allow for new calculation
-    // Optionally clear form fields:
-    // document.getElementById('tipForm').reset();
-    // const today = new Date().toISOString().split('T')[0];
-    // document.getElementById('shiftDate').value = today;
-}
-
-function saveTipEntry() {
-    if (!currentUser || !lastCalculation) return;
-    
-    // Check if entry for this date already exists
-    const existingIndex = tipEntries.findIndex(entry => entry.date === lastCalculation.date);
-    
-    if (existingIndex >= 0) {
-        if (confirm('An entry for this date already exists. Do you want to update it?')) {
-            tipEntries[existingIndex] = { ...lastCalculation, id: tipEntries[existingIndex].id };
-        } else {
-            return;
-        }
-    } else {
-        tipEntries.push({ ...lastCalculation, id: Date.now().toString() });
-    }
-    
-    saveUserData();
-    alert('Tip entry saved successfully!');
-    document.getElementById('savePrompt').classList.add('hidden');
 }
 
 // Dashboard Functions

@@ -30,13 +30,14 @@
         <div class="nav-container">
             <span class="nav-brand">Tip Tracker Pro</span>
             <div class="nav-menu">
-                <span id="userGreeting" class="nav-item"></span>
-                <button class="nav-item nav-link" onclick="showView('calculator')">Calculator</button>
-                <button class="nav-item nav-link" onclick="showView('dashboard')">Dashboard</button>
-                <button class="nav-item nav-link" onclick="showView('history')">History</button>
-                <button class="nav-item nav-link" onclick="showView('analytics')">Analytics</button>
-                <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="nav-item nav-coffee">☕</a>
-                <button class="nav-item nav-link" onclick="logout()">Logout</button>
+                <span id="userGreeting" class="nav-item user-greeting"></span>
+                <div class="nav-links">
+                    <button class="nav-link" onclick="showView('calculator')">Calculator</button>
+                    <button class="nav-link" onclick="showView('dashboard')">Dashboard</button>
+                    <button class="nav-link" onclick="showView('history')">History</button>
+                    <button class="nav-link" onclick="showView('analytics')">Analytics</button>
+                    <button class="nav-link logout-btn" onclick="logout()">Logout</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -86,14 +87,16 @@
                                     <p><strong>Check your email inbox</strong> for a confirmation message from Supabase.</p>
                                     <p>You must click the confirmation link before you can sign in.</p>
                                     <p><small>Don't see it? Check your spam folder.</small></p>
+                                    <button type="button" class="btn btn-secondary" onclick="resendConfirmation()" style="margin-top: 0.75rem;">
+                                        Didn't receive email? Send again
+                                    </button>
                                 </div>
                             </div>
                             
                             <div class="form-fields">
-                                <input type="email" id="loginEmail" placeholder="Email" required>
-                                <input type="password" id="loginPassword" placeholder="Password" required>
+                                <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" required>
+                                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
                                 <button type="submit" class="btn btn-primary btn-large">Sign In</button>
-                                <button type="button" class="btn btn-secondary" onclick="debugUser()" style="margin-top: 0.5rem;">Debug User Status</button>
                             </div>
                             <p class="toggle-auth">Don't have an account? <a href="#" onclick="toggleAuth()">Sign up</a></p>
                         </form>
@@ -114,9 +117,9 @@
                             
                             <div id="registrationForm" class="registration-form-fields">
                                 <div class="form-fields">
-                                    <input type="text" id="registerName" placeholder="Username" required>
-                                    <input type="email" id="registerEmail" placeholder="Email" required>
-                                    <input type="password" id="registerPassword" placeholder="Password" required>
+                                    <input type="email" id="registerEmail" placeholder="Email" autocomplete="username" required>
+                                    <input type="password" id="registerPassword" placeholder="Password" autocomplete="new-password" required>
+                                    <input type="text" id="registerName" placeholder="Display Name (optional)" autocomplete="name" aria-label="Display Name">
                                     <button type="submit" class="btn btn-primary btn-large">Create Account</button>
                                 </div>
                                 
@@ -166,7 +169,7 @@
                         <input type="date" id="shiftDate" required>
                     </div>
                     <div class="form-group">
-                        <label for="hoursWorked">Hours Worked:</label>
+                        <label for="hoursWorked">Hours Worked (optional):</label>
                         <input type="number" id="hoursWorked" step="0.25" placeholder="8.0">
                     </div>
                 </div>
@@ -204,6 +207,42 @@
 
                 <button type="button" class="btn btn-primary btn-large" onclick="calculateTip()">Calculate Tips</button>
             </form>
+
+            <!-- Quick Tip Entry Section -->
+            <div class="quick-entry-section">
+                <div class="quick-entry-divider">
+                    <span>OR</span>
+                </div>
+                
+                <div class="quick-entry-form">
+                    <h3>Already have your tips calculated?</h3>
+                    <p class="quick-entry-subtitle">Enter them here to save directly to your history</p>
+                    
+                    <form id="quickEntryForm" class="quick-form">
+                        <div class="quick-form-row">
+                            <div class="form-group">
+                                <label for="quickDate">Date:</label>
+                                <input type="date" id="quickDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="quickTips">Tips Amount:</label>
+                                <input type="number" id="quickTips" step="0.01" placeholder="0.00" inputmode="decimal" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="quickHours">Hours (optional):</label>
+                                <input type="number" id="quickHours" step="0.25" placeholder="8.0">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quickNotes">Notes (optional):</label>
+                            <textarea id="quickNotes" rows="2" placeholder="Quick notes about this shift..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-secondary btn-large">💾 Save Tip Entry</button>
+                    </form>
+                </div>
+            </div>
 
             <div id="results" class="results hidden">
                 <div class="results-header">
@@ -249,15 +288,7 @@
                 </div>
 
                 <div class="pay-period-section">
-                    <div class="section-header">
-                        <h2>Pay Period Summary</h2>
-                        <div class="coffee-support">
-                            <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="coffee-link">
-                                <span class="coffee-icon">☕</span>
-                                <span class="coffee-text">Buy me a coffee</span>
-                            </a>
-                        </div>
-                    </div>
+                    <h2>Pay Period Summary</h2>
                     <div class="pay-period-controls">
                         <div class="control-group">
                             <label for="payPeriodSelect">Period:</label>
@@ -281,15 +312,7 @@
         <div class="container">
             <h1>Tip History</h1>
             <div class="history-controls">
-                <div class="section-header">
-                    <h2>Filter History</h2>
-                    <div class="coffee-support">
-                        <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="coffee-link">
-                            <span class="coffee-icon">☕</span>
-                            <span class="coffee-text">Support</span>
-                        </a>
-                    </div>
-                </div>
+                <h2>Filter History</h2>
                 <div class="date-range-selector">
                     <div class="control-group">
                         <label>Date Range:</label>
@@ -311,15 +334,7 @@
     <!-- Analytics View -->
     <div id="analyticsView" class="view hidden">
         <div class="container">
-            <div class="section-header">
-                <h1>Analytics</h1>
-                <div class="coffee-support">
-                    <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="coffee-link">
-                        <span class="coffee-icon">☕</span>
-                        <span class="coffee-text">Enjoying the insights?</span>
-                    </a>
-                </div>
-            </div>
+            <h1>Analytics</h1>
             <div class="charts-container">
                 <div class="chart-section">
                     <h2>Tips by Day of Week</h2>
@@ -332,6 +347,16 @@
             </div>
         </div>
     </div>
+
+    <!-- Discrete Footer Support -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p class="footer-text">Built with ❤️ for service industry professionals</p>
+            <a href="https://venmo.com/u/Dale-Crockwell" target="_blank" class="footer-support">
+                ☕ Support this project
+            </a>
+        </div>
+    </footer>
 
     <script src="tip.js"></script>
 </body>

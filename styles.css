@@ -40,7 +40,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 1.5rem;
 }
 
 .nav-brand {
@@ -53,11 +53,22 @@ body {
 .nav-menu {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: space-between;
+    flex: 1;
+    margin-left: 2rem;
 }
 
-.nav-item {
-    color: white;
+.user-greeting {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-right: auto;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .nav-link {
@@ -65,10 +76,10 @@ body {
     border: none;
     color: white;
     cursor: pointer;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
     transition: all 0.2s;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
     backdrop-filter: blur(10px);
 }
@@ -76,30 +87,60 @@ body {
 .nav-link:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.nav-coffee {
-    background: #ff6b35;
-    color: white !important;
-    padding: 0.6rem 1rem;
+.logout-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    margin-left: 0.5rem;
+    padding-left: 1rem;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 107, 53, 0.8);
+}
+
+/* Footer */
+.app-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 1.5rem 0;
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.footer-text {
+    color: #6c757d;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.footer-support {
+    background: linear-gradient(135deg, #ff6b35, #e55a2b);
+    color: white;
+    padding: 0.5rem 1rem;
     border-radius: 20px;
     text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 36px;
-    height: 36px;
-    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
 }
 
-.nav-coffee:hover {
-    background: #e55a2b;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+.footer-support:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 /* Section Headers with Coffee Support */
@@ -581,6 +622,74 @@ body {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Quick Tip Entry */
+.quick-entry-section {
+    margin: 3rem 0 2rem 0;
+    position: relative;
+}
+
+.quick-entry-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.quick-entry-divider::before {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+    margin-right: 1rem;
+}
+
+.quick-entry-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+    margin-left: 1rem;
+}
+
+.quick-entry-divider span {
+    background: #f7fafc;
+    padding: 0.5rem 1rem;
+    color: #718096;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 20px;
+    border: 2px solid #e2e8f0;
+}
+
+.quick-entry-form {
+    background: #f8f9ff;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 2px solid #e6f3ff;
+}
+
+.quick-entry-form h3 {
+    color: #4a5568;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+    text-align: center;
+}
+
+.quick-entry-subtitle {
+    color: #718096;
+    text-align: center;
+    margin: 0 0 1.5rem 0;
+    font-size: 0.95rem;
+}
+
+.quick-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
 /* View Headers */
 .view-header {
     text-align: center;
@@ -957,24 +1066,46 @@ body {
     }
     
     .nav-menu {
-        gap: 0.25rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .user-greeting {
+        text-align: center;
+        margin: 0;
+        padding: 0.25rem;
+        order: 1;
+    }
+    
+    .nav-links {
+        justify-content: center;
         flex-wrap: wrap;
+        gap: 0.25rem;
+        order: 2;
     }
     
     .nav-link {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.8rem;
-    }
-    
-    .nav-coffee {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
-        min-width: 32px;
-        height: 32px;
+        flex: 1;
+        min-width: 80px;
+    }
+    
+    .logout-btn {
+        margin-left: 0;
+        padding-left: 0.8rem;
+        border-left: none;
+        background: rgba(255, 107, 53, 0.8);
     }
     
     .nav-brand {
         font-size: 1.2rem;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
     }
     
     .auth-container {
@@ -1010,6 +1141,15 @@ body {
     
     .privacy-icon {
         align-self: center;
+    }
+    
+    .quick-form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .quick-entry-form {
+        padding: 1.5rem;
     }
 }
 
