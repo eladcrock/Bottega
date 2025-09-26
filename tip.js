@@ -668,8 +668,8 @@ async function loadHistory() {
             <div class="history-date">${new Date(entry.date).toLocaleDateString()}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                <div><strong>Hours:</strong> ${entry.hours_worked}h</div>
-                <div><strong>Rate:</strong> $${entry.hours_worked > 0 ? (entry.breakdown.netTip / entry.hours_worked).toFixed(2) : '0'}/hr</div>
+                ${entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
+                ${entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
             <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
@@ -707,8 +707,8 @@ function filterHistory() {
             <div class="history-date">${new Date(entry.date).toLocaleDateString()}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                <div><strong>Hours:</strong> ${entry.hours_worked}h</div>
-                <div><strong>Rate:</strong> $${entry.hours_worked > 0 ? (entry.breakdown.netTip / entry.hours_worked).toFixed(2) : '0'}/hr</div>
+                ${entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
+                ${entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
             <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
