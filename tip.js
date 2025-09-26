@@ -653,12 +653,12 @@ function updatePayPeriodSummary() {
         totalHours += workHours;
     });
     
-    // Calculate base wage earnings for period
+    // Calculate base wage earnings for period (for reference only)
     const numShifts = periodEntries.length;
     const baseWageTotal = HOURLY_WAGE * PAID_HOURS_PER_DAY * numShifts;
     
-    // Total gross pay (tips + wages)
-    const grossPay = periodTipTotal + baseWageTotal;
+    // Gross pay is ONLY tips for pay period tracking
+    const grossPay = periodTipTotal;
     
     // Calculate comprehensive California tax and payroll deductions
     // This includes: Federal tax, CA state tax, Social Security, Medicare, CA SDI, CA ETT
