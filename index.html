@@ -250,14 +250,14 @@
                     <h2>Results</h2>
                 </div>
                 <div id="output"></div>
-                <div id="savePrompt" class="save-prompt hidden">
-                    <button class="btn btn-secondary" onclick="saveTipEntry()">💾 Save This Entry</button>
-                </div>
                 <div class="results-actions">
                     <button class="btn btn-secondary" onclick="clearResults()">Calculate Another</button>
                     <div id="guestBackPrompt" class="guest-back-cta hidden">
                         <button class="btn btn-primary" onclick="showView('welcome')">Back to Home</button>
                     </div>
+                </div>
+                <div id="savePrompt" class="save-prompt hidden">
+                    <button class="btn btn-secondary" onclick="saveTipEntry()">💾 Save This Entry</button>
                 </div>
             </div>
         </div>
@@ -278,8 +278,12 @@
                         <div class="stat-value" id="monthlyTotal">$0</div>
                     </div>
                     <div class="stat-card">
-                        <h3>Average per Hour</h3>
+                        <h3>Tips per Hour</h3>
                         <div class="stat-value" id="avgPerHour">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Average Hourly</h3>
+                        <div class="stat-value" id="totalWages">$0</div>
                     </div>
                     <div class="stat-card">
                         <h3>Best Day</h3>

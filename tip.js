@@ -443,7 +443,7 @@ function calculateTip() {
     // Store calculation for potential saving
     lastCalculation = {
         date: document.getElementById('shiftDate').value,
-        hours_worked: parseFloat(document.getElementById('hoursWorked').value) || 0,
+        hours_worked: parseFloat(document.getElementById('hoursWorked').value) || 7,
         notes: document.getElementById('notes').value,
         total_tips: totalTips,
         net_sales: netSales,
@@ -568,10 +568,28 @@ async function loadDashboard() {
     const monthlyEntries = tipEntries.filter(entry => new Date(entry.date) >= monthStart);
     const monthlyTotal = monthlyEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
     
-    // Average per hour
-    const totalHours = tipEntries.reduce((sum, entry) => sum + entry.hours_worked, 0);
-    const totalEarnings = tipEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
-    const avgPerHour = totalHours > 0 ? totalEarnings / totalHours : 0;
+    // Calculate hourly rates with 7 hour default
+    const MINIMUM_WAGE = 16.50;
+    const DEFAULT_HOURS = 7;
+    const PAID_HOURS_PER_SHIFT = 6.5; // 7 hours minus 0.5 hour unpaid break
+    
+    let totalWorkHours = 0;
+    let totalTipEarnings = 0;
+    let totalShifts = tipEntries.length;
+    
+    tipEntries.forEach(entry => {
+        // Use 7 hours default if no hours entered or hours is 0
+        const workHours = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
+        
+        totalWorkHours += workHours;
+        totalTipEarnings += entry.breakdown.netTip;
+    });
+    
+    const avgTipPerHour = totalWorkHours > 0 ? totalTipEarnings / totalWorkHours : 0;
+    
+    // Calculate total hourly: wage per hour + tip per hour
+    const wagePerHour = totalShifts > 0 ? (MINIMUM_WAGE * PAID_HOURS_PER_SHIFT * totalShifts) / totalWorkHours : 0;
+    const totalHourlyRate = wagePerHour + avgTipPerHour;
     
     // Best day analysis - sorted by highest average
     const dayTotals = {};
@@ -611,7 +629,8 @@ async function loadDashboard() {
     // Update dashboard elements
     document.getElementById('weeklyTotal').textContent = `$${weeklyTotal.toFixed(2)}`;
     document.getElementById('monthlyTotal').textContent = `$${monthlyTotal.toFixed(2)}`;
-    document.getElementById('avgPerHour').textContent = `$${avgPerHour.toFixed(2)}`;
+    document.getElementById('avgPerHour').textContent = `$${avgTipPerHour.toFixed(2)}`;
+    document.getElementById('totalWages').textContent = `$${totalHourlyRate.toFixed(2)}`;
     document.getElementById('bestDay').textContent = bestDay;
     
     updatePayPeriodSummary();
@@ -671,13 +690,25 @@ async function loadHistory() {
         return;
     }
     
-    historyList.innerHTML = sortedEntries.map(entry => `
+    historyList.innerHTML = sortedEntries.map(entry => {
+        // Calculate total hourly for this entry
+        const MINIMUM_WAGE = 16.50;
+        const DEFAULT_HOURS = 7;
+        const PAID_HOURS_PER_SHIFT = 6.5;
+        
+        const workHours = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
+        const tipPerHour = entry.breakdown.netTip / workHours;
+        const wagePerHour = (MINIMUM_WAGE * PAID_HOURS_PER_SHIFT) / workHours;
+        const totalHourly = wagePerHour + tipPerHour;
+        
+        return `
         <div class="history-item">
             <div class="history-date">${formatDateLocal(entry.date)}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
                 ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
-                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
+                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Tips/Hr:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}</div>` : ''}
+                <div><strong>Total Hourly:</strong> $${totalHourly.toFixed(2)}</div>
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
             <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
@@ -685,8 +716,8 @@ async function loadHistory() {
                 <button class="btn btn-secondary btn-small" onclick="editEntry('${entry.id}')">Edit</button>
                 <button class="btn btn-secondary btn-small" onclick="deleteEntry('${entry.id}')">Delete</button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function filterHistory() {
@@ -710,13 +741,25 @@ function filterHistory() {
         return;
     }
     
-    historyList.innerHTML = filteredEntries.map(entry => `
+    historyList.innerHTML = filteredEntries.map(entry => {
+        // Calculate total hourly for this entry
+        const MINIMUM_WAGE = 16.50;
+        const DEFAULT_HOURS = 7;
+        const PAID_HOURS_PER_SHIFT = 6.5;
+        
+        const workHours = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
+        const tipPerHour = entry.breakdown.netTip / workHours;
+        const wagePerHour = (MINIMUM_WAGE * PAID_HOURS_PER_SHIFT) / workHours;
+        const totalHourly = wagePerHour + tipPerHour;
+        
+        return `
         <div class="history-item">
             <div class="history-date">${formatDateLocal(entry.date)}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
                 ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
-                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
+                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Tips/Hr:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}</div>` : ''}
+                <div><strong>Total Hourly:</strong> $${totalHourly.toFixed(2)}</div>
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
             <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
@@ -724,8 +767,8 @@ function filterHistory() {
                 <button class="btn btn-secondary btn-small" onclick="editEntry('${entry.id}')">Edit</button>
                 <button class="btn btn-secondary btn-small" onclick="deleteEntry('${entry.id}')">Delete</button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 async function editEntry(entryId) {
@@ -855,7 +898,7 @@ function createTimeChart() {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: sortedEntries.map(entry => new Date(entry.date).toLocaleDateString()),
+            labels: sortedEntries.map(entry => formatDateLocal(entry.date)),
             datasets: [{
                 label: 'Net Tips',
                 data: sortedEntries.map(entry => entry.breakdown.netTip),
@@ -900,62 +943,6 @@ function showDashboard() {
     showView('dashboard');
 }
 
-function loadDashboard() {
-    if (!currentUser) return;
-    
-    const now = new Date();
-    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    // Weekly total
-    const weeklyEntries = tipEntries.filter(entry => new Date(entry.date) >= weekStart);
-    const weeklyTotal = weeklyEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
-    
-    // Monthly total
-    const monthlyEntries = tipEntries.filter(entry => new Date(entry.date) >= monthStart);
-    const monthlyTotal = monthlyEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
-    
-    // Average per hour
-    const totalHours = tipEntries.reduce((sum, entry) => sum + entry.hoursWorked, 0);
-    const totalEarnings = tipEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
-    const avgPerHour = totalHours > 0 ? totalEarnings / totalHours : 0;
-    
-    // Best day analysis
-    const dayTotals = {};
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    tipEntries.forEach(entry => {
-        const dayOfWeek = new Date(entry.date).getDay();
-        const dayName = dayNames[dayOfWeek];
-        
-        if (!dayTotals[dayName]) {
-            dayTotals[dayName] = { total: 0, count: 0 };
-        }
-        
-        dayTotals[dayName].total += entry.breakdown.netTip;
-        dayTotals[dayName].count += 1;
-    });
-    
-    let bestDay = '-';
-    let bestAverage = 0;
-    
-    Object.keys(dayTotals).forEach(day => {
-        const average = dayTotals[day].total / dayTotals[day].count;
-        if (average > bestAverage) {
-            bestAverage = average;
-            bestDay = day;
-        }
-    });
-    
-    // Update dashboard elements
-    document.getElementById('weeklyTotal').textContent = `$${weeklyTotal.toFixed(2)}`;
-    document.getElementById('monthlyTotal').textContent = `$${monthlyTotal.toFixed(2)}`;
-    document.getElementById('avgPerHour').textContent = `$${avgPerHour.toFixed(2)}`;
-    document.getElementById('bestDay').textContent = bestDay;
-    
-    updatePayPeriodSummary();
-}
-
 function updatePayPeriodSummary() {
     if (!currentUser) return;
     
@@ -996,94 +983,4 @@ function updatePayPeriodSummary() {
     document.getElementById('payPeriodDates').textContent = 
         `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
     document.getElementById('payPeriodTotal').textContent = `$${periodTotal.toFixed(2)}`;
-}
-
-// History Functions
-function loadHistory() {
-    if (!currentUser) return;
-    
-    const sortedEntries = [...tipEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const historyList = document.getElementById('historyList');
-    
-    if (sortedEntries.length === 0) {
-        historyList.innerHTML = '<p class="no-data">No tip entries found. Start by calculating some tips!</p>';
-        return;
-    }
-    
-    historyList.innerHTML = sortedEntries.map(entry => `
-        <div class="history-item">
-            <div class="history-date">${new Date(entry.date).toLocaleDateString()}</div>
-            <div class="history-details">
-                <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                <div><strong>Hours:</strong> ${entry.hoursWorked}h</div>
-                <div><strong>Rate:</strong> $${entry.hoursWorked > 0 ? (entry.breakdown.netTip / entry.hoursWorked).toFixed(2) : '0'}/hr</div>
-                ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
-            </div>
-            <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
-            <div class="history-actions">
-                <button class="btn btn-secondary btn-small" onclick="editEntry('${entry.id}')">Edit</button>
-                <button class="btn btn-secondary btn-small" onclick="deleteEntry('${entry.id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function filterHistory() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    
-    if (!startDate || !endDate) {
-        loadHistory(); // Show all if no dates selected
-        return;
-    }
-    
-    const filteredEntries = tipEntries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
-    }).sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    const historyList = document.getElementById('historyList');
-    
-    if (filteredEntries.length === 0) {
-        historyList.innerHTML = '<p class="no-data">No entries found for the selected date range.</p>';
-        return;
-    }
-    
-    historyList.innerHTML = filteredEntries.map(entry => `
-        <div class="history-item">
-            <div class="history-date">${new Date(entry.date).toLocaleDateString()}</div>
-            <div class="history-details">
-                <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                <div><strong>Hours:</strong> ${entry.hoursWorked}h</div>
-                <div><strong>Rate:</strong> $${entry.hoursWorked > 0 ? (entry.breakdown.netTip / entry.hoursWorked).toFixed(2) : '0'}/hr</div>
-                ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
-            </div>
-            <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
-            <div class="history-actions">
-                <button class="btn btn-secondary btn-small" onclick="editEntry('${entry.id}')">Edit</button>
-                <button class="btn btn-secondary btn-small" onclick="deleteEntry('${entry.id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function editEntry(entryId) {
-    const entry = tipEntries.find(e => e.id === entryId);
-    if (!entry) return;
-    
-    // Populate calculator form with entry data
-    document.getElementById('shiftDate').value = entry.date;
-    document.getElementById('hoursWorked').value = entry.hoursWorked;
-    document.getElementById('totalTips').value = entry.totalTips;
-    document.getElementById('netSales').value = entry.netSales;
-    document.getElementById('wineSales').value = entry.wineSales;
-    document.getElementById('numHosts').value = entry.numHosts;
-    document.getElementById('numRunners').value = entry.numRunners;
-    document.getElementById('notes').value = entry.notes;
-    
-    // Switch to calculator view
-    showView('calculator');
-    
-    // Calculate with existing data
-    calculateTip();
 }
