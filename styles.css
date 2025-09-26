@@ -1158,6 +1158,22 @@ body {
         align-items: flex-start;
     }
     
+    .control-group {
+        width: 100%;
+    }
+    
+    .select-styled {
+        width: 100%;
+        font-size: 0.9rem;
+        padding: 0.65rem 0.8rem;
+        padding-right: 2.5rem;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
     .pay-period-dates {
         text-align: left;
     }
@@ -1301,6 +1317,39 @@ body {
     
     .quick-entry-form {
         padding: 1.5rem;
+    }
+    
+    .error-message {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        gap: 0.75rem;
+    }
+    
+    .error-content {
+        text-align: left;
+    }
+    
+    .error-icon {
+        font-size: 1.2rem;
+    }
+    
+    .error-content h4 {
+        font-size: 1rem;
+        margin-bottom: 0.4rem;
+    }
+    
+    .error-content p {
+        font-size: 0.85rem;
+        margin: 0.2rem 0;
+        line-height: 1.3;
+    }
+    
+    .error-content button {
+        margin-top: 0.5rem !important;
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+        display: inline-block;
+        width: auto;
     }
 }
 
