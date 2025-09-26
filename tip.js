@@ -17,6 +17,13 @@ function formatDateLocal(dateString) {
     return date.toLocaleDateString();
 }
 
+// Helper function to create date object without timezone issues
+function createLocalDate(dateString) {
+    // Parse YYYY-MM-DD format and create date in local timezone
+    const [year, month, day] = dateString.split('-');
+    return new Date(year, month - 1, day); // month is 0-indexed
+}
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -566,11 +573,11 @@ async function loadDashboard() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Weekly total
-    const weeklyEntries = tipEntries.filter(entry => new Date(entry.date) >= weekStart);
+    const weeklyEntries = tipEntries.filter(entry => createLocalDate(entry.date) >= weekStart);
     const weeklyTotal = weeklyEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
     
     // Monthly total
-    const monthlyEntries = tipEntries.filter(entry => new Date(entry.date) >= monthStart);
+    const monthlyEntries = tipEntries.filter(entry => createLocalDate(entry.date) >= monthStart);
     const monthlyTotal = monthlyEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
     
     // Calculate hourly rates with 7 hour default
@@ -632,7 +639,7 @@ function updatePayPeriodSummary() {
     }
     
     const periodEntries = tipEntries.filter(entry => {
-        const entryDate = new Date(entry.date);
+        const entryDate = createLocalDate(entry.date);
         return entryDate >= startDate && entryDate <= endDate;
     });
     
@@ -672,7 +679,7 @@ function updatePayPeriodSummary() {
 async function loadHistory() {
     if (!currentUser) return;
     
-    const sortedEntries = [...tipEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedEntries = [...tipEntries].sort((a, b) => createLocalDate(b.date) - createLocalDate(a.date));
     const historyList = document.getElementById('historyList');
     
     if (sortedEntries.length === 0) {
@@ -692,8 +699,8 @@ async function loadHistory() {
             <div class="history-date">${formatDateLocal(entry.date)}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
-                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Tips/Hr:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}</div>` : ''}
+                <div><strong>Hours:</strong> ${workHours}h</div>
+                <div><strong>Tips/Hr:</strong> $${tipPerHour.toFixed(2)}</div>
                 <div><strong>Total Hourly:</strong> $${totalHourly.toFixed(2)}</div>
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
@@ -716,9 +723,9 @@ function filterHistory() {
     }
     
     const filteredEntries = tipEntries.filter(entry => {
-        const entryDate = new Date(entry.date);
+        const entryDate = createLocalDate(entry.date);
         return entryDate >= new Date(startDate) && entryDate <= new Date(endDate);
-    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+    }).sort((a, b) => createLocalDate(b.date) - createLocalDate(a.date));
     
     const historyList = document.getElementById('historyList');
     
@@ -739,8 +746,8 @@ function filterHistory() {
             <div class="history-date">${formatDateLocal(entry.date)}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
-                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Tips/Hr:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}</div>` : ''}
+                <div><strong>Hours:</strong> ${workHours}h</div>
+                <div><strong>Tips/Hr:</strong> $${tipPerHour.toFixed(2)}</div>
                 <div><strong>Total Hourly:</strong> $${totalHourly.toFixed(2)}</div>
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
@@ -851,7 +858,7 @@ function createBestDaysAnalysis() {
     
     // Calculate totals by day
     tipEntries.forEach(entry => {
-        const dayOfWeek = new Date(entry.date).getDay();
+        const dayOfWeek = createLocalDate(entry.date).getDay();
         const dayName = dayNames[dayOfWeek];
         
         if (currentAnalyticsView === 'tips') {
@@ -904,7 +911,7 @@ function createDayOfWeekChart() {
     const dayCounts = new Array(7).fill(0);
     
     tipEntries.forEach(entry => {
-        const dayOfWeek = new Date(entry.date).getDay();
+        const dayOfWeek = createLocalDate(entry.date).getDay();
         if (currentAnalyticsView === 'tips') {
             dayTotals[dayOfWeek] += entry.breakdown.netTip;
         } else {
@@ -977,7 +984,7 @@ function createDayOfWeekChart() {
 }
 
 function createTimeChart() {
-    const sortedEntries = [...tipEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedEntries = [...tipEntries].sort((a, b) => createLocalDate(a.date) - createLocalDate(b.date));
     
     // Destroy existing chart if it exists
     if (timeChart) {
