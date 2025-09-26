@@ -529,8 +529,15 @@ async function saveTipEntry() {
 }
 
 function clearResults() {
-    // Hide results and clear form if desired
+    // Hide results and clear form
     document.getElementById('results').classList.add('hidden');
+    
+    // Reset the form to clear all fields
+    document.getElementById('tipForm').reset();
+    
+    // Set today's date as the default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('shiftDate').value = today;
 }
 
 // Dashboard Functions
