@@ -4,6 +4,14 @@ let currentView = 'welcome';
 let tipEntries = [];
 let lastCalculation = null;
 
+// Helper function to format dates without timezone issues
+function formatDateLocal(dateString) {
+    // Parse YYYY-MM-DD format and create date in local timezone
+    const [year, month, day] = dateString.split('-');
+    const date = new Date(year, month - 1, day); // month is 0-indexed
+    return date.toLocaleDateString();
+}
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -665,11 +673,11 @@ async function loadHistory() {
     
     historyList.innerHTML = sortedEntries.map(entry => `
         <div class="history-item">
-            <div class="history-date">${new Date(entry.date).toLocaleDateString()}</div>
+            <div class="history-date">${formatDateLocal(entry.date)}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                ${entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
-                ${entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
+                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
+                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
             <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
@@ -704,11 +712,11 @@ function filterHistory() {
     
     historyList.innerHTML = filteredEntries.map(entry => `
         <div class="history-item">
-            <div class="history-date">${new Date(entry.date).toLocaleDateString()}</div>
+            <div class="history-date">${formatDateLocal(entry.date)}</div>
             <div class="history-details">
                 <div><strong>Net Tips:</strong> $${entry.breakdown.netTip.toFixed(2)}</div>
-                ${entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
-                ${entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
+                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Hours:</strong> ${entry.hours_worked}h</div>` : ''}
+                ${entry.hours_worked && entry.hours_worked > 0 ? `<div><strong>Rate:</strong> $${(entry.breakdown.netTip / entry.hours_worked).toFixed(2)}/hr</div>` : ''}
                 ${entry.notes ? `<div><strong>Notes:</strong> ${entry.notes}</div>` : ''}
             </div>
             <div class="history-amount">$${entry.breakdown.netTip.toFixed(2)}</div>
