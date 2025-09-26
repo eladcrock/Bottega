@@ -4,6 +4,11 @@ let currentView = 'welcome';
 let tipEntries = [];
 let lastCalculation = null;
 
+// Constants for wage calculations
+const HOURLY_WAGE = 16.50;
+const PAID_HOURS_PER_DAY = 6.5; // 7 hours minus 0.5 hour unpaid break
+const DEFAULT_HOURS = 7;
+
 // Helper function to format dates without timezone issues
 function formatDateLocal(dateString) {
     // Parse YYYY-MM-DD format and create date in local timezone
@@ -569,10 +574,6 @@ async function loadDashboard() {
     const monthlyTotal = monthlyEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
     
     // Calculate hourly rates with 7 hour default
-    const MINIMUM_WAGE = 16.50;
-    const DEFAULT_HOURS = 7;
-    const PAID_HOURS_PER_SHIFT = 6.5; // 7 hours minus 0.5 hour unpaid break
-    
     let totalWorkHours = 0;
     let totalTipEarnings = 0;
     let totalShifts = tipEntries.length;
@@ -588,50 +589,14 @@ async function loadDashboard() {
     const avgTipPerHour = totalWorkHours > 0 ? totalTipEarnings / totalWorkHours : 0;
     
     // Calculate total hourly: wage per hour + tip per hour
-    const wagePerHour = totalShifts > 0 ? (MINIMUM_WAGE * PAID_HOURS_PER_SHIFT * totalShifts) / totalWorkHours : 0;
+    const wagePerHour = totalShifts > 0 ? (HOURLY_WAGE * PAID_HOURS_PER_DAY * totalShifts) / totalWorkHours : 0;
     const totalHourlyRate = wagePerHour + avgTipPerHour;
-    
-    // Best day analysis - sorted by highest average
-    const dayTotals = {};
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    tipEntries.forEach(entry => {
-        const dayOfWeek = new Date(entry.date).getDay();
-        const dayName = dayNames[dayOfWeek];
-        
-        if (!dayTotals[dayName]) {
-            dayTotals[dayName] = { total: 0, count: 0, entries: [] };
-        }
-        
-        dayTotals[dayName].total += entry.breakdown.netTip;
-        dayTotals[dayName].count += 1;
-        dayTotals[dayName].entries.push(entry.breakdown.netTip);
-    });
-    
-    // Sort days by average earnings (highest first)
-    const sortedDays = Object.entries(dayTotals)
-        .map(([day, data]) => ({
-            day,
-            average: data.count > 0 ? data.total / data.count : 0,
-            count: data.count,
-            total: data.total
-        }))
-        .sort((a, b) => b.average - a.average);
-    
-    let bestDay = '-';
-    let bestDayStats = '';
-    
-    if (sortedDays.length > 0 && sortedDays[0].count > 0) {
-        bestDay = sortedDays[0].day;
-        bestDayStats = `$${sortedDays[0].average.toFixed(2)} avg`;
-    }
     
     // Update dashboard elements
     document.getElementById('weeklyTotal').textContent = `$${weeklyTotal.toFixed(2)}`;
     document.getElementById('monthlyTotal').textContent = `$${monthlyTotal.toFixed(2)}`;
     document.getElementById('avgPerHour').textContent = `$${avgTipPerHour.toFixed(2)}`;
     document.getElementById('totalWages').textContent = `$${totalHourlyRate.toFixed(2)}`;
-    document.getElementById('bestDay').textContent = bestDay;
     
     updatePayPeriodSummary();
 }
@@ -671,11 +636,36 @@ function updatePayPeriodSummary() {
         return entryDate >= startDate && entryDate <= endDate;
     });
     
-    const periodTotal = periodEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
+    // Calculate tip earnings for period
+    const periodTipTotal = periodEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
     
+    // Calculate hours worked for period
+    let totalHours = 0;
+    periodEntries.forEach(entry => {
+        const workHours = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
+        totalHours += workHours;
+    });
+    
+    // Calculate base wage earnings for period
+    const numShifts = periodEntries.length;
+    const baseWageTotal = HOURLY_WAGE * PAID_HOURS_PER_DAY * numShifts;
+    
+    // Total gross pay (tips + wages)
+    const grossPay = periodTipTotal + baseWageTotal;
+    
+    // Calculate comprehensive California tax and payroll deductions
+    // This includes: Federal tax, CA state tax, Social Security, Medicare, CA SDI, CA ETT
+    // Using simplified rates for typical server income levels in California
+    const deductionRate = parseFloat(document.getElementById('taxBracket').value);
+    const totalDeductions = grossPay * (deductionRate / 100);
+    const netPay = grossPay - totalDeductions;
+    
+    // Update display
     document.getElementById('payPeriodDates').textContent = 
         `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
-    document.getElementById('payPeriodTotal').textContent = `$${periodTotal.toFixed(2)}`;
+    document.getElementById('payPeriodTotal').textContent = `$${grossPay.toFixed(2)}`;
+    document.getElementById('estimatedTax').textContent = `-$${totalDeductions.toFixed(2)}`;
+    document.getElementById('netPay').textContent = `$${netPay.toFixed(2)}`;
 }
 
 // History Functions
@@ -692,13 +682,9 @@ async function loadHistory() {
     
     historyList.innerHTML = sortedEntries.map(entry => {
         // Calculate total hourly for this entry
-        const MINIMUM_WAGE = 16.50;
-        const DEFAULT_HOURS = 7;
-        const PAID_HOURS_PER_SHIFT = 6.5;
-        
         const workHours = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
         const tipPerHour = entry.breakdown.netTip / workHours;
-        const wagePerHour = (MINIMUM_WAGE * PAID_HOURS_PER_SHIFT) / workHours;
+        const wagePerHour = (HOURLY_WAGE * PAID_HOURS_PER_DAY) / workHours;
         const totalHourly = wagePerHour + tipPerHour;
         
         return `
@@ -743,13 +729,9 @@ function filterHistory() {
     
     historyList.innerHTML = filteredEntries.map(entry => {
         // Calculate total hourly for this entry
-        const MINIMUM_WAGE = 16.50;
-        const DEFAULT_HOURS = 7;
-        const PAID_HOURS_PER_SHIFT = 6.5;
-        
         const workHours = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
         const tipPerHour = entry.breakdown.netTip / workHours;
-        const wagePerHour = (MINIMUM_WAGE * PAID_HOURS_PER_SHIFT) / workHours;
+        const wagePerHour = (HOURLY_WAGE * PAID_HOURS_PER_DAY) / workHours;
         const totalHourly = wagePerHour + tipPerHour;
         
         return `
@@ -819,15 +801,101 @@ async function deleteEntry(entryId) {
 }
 
 // Analytics Functions
+let currentAnalyticsView = 'tips';
+let dayChart = null;
+let timeChart = null;
+
+function toggleAnalytics(viewType) {
+    currentAnalyticsView = viewType;
+    
+    // Update button states
+    document.getElementById('tipsToggle').classList.toggle('active', viewType === 'tips');
+    document.getElementById('hourlyToggle').classList.toggle('active', viewType === 'hourly');
+    
+    // Update chart titles
+    if (viewType === 'tips') {
+        document.getElementById('dayChartTitle').textContent = 'Tips by Day of Week';
+        document.getElementById('timeChartTitle').textContent = 'Tips Over Time';
+    } else {
+        document.getElementById('dayChartTitle').textContent = 'Total Hourly Rate by Day of Week';
+        document.getElementById('timeChartTitle').textContent = 'Total Hourly Rate Over Time';
+    }
+    
+    // Recreate all analytics with new data
+    createBestDaysAnalysis();
+    createDayOfWeekChart();
+    createTimeChart();
+}
+
 async function loadAnalytics() {
     if (!currentUser || tipEntries.length === 0) {
         document.getElementById('dayChart').parentElement.innerHTML = '<p class="no-data">No data available for analytics. Add some tip entries first!</p>';
         document.getElementById('timeChart').parentElement.innerHTML = '<p class="no-data">No data available for analytics. Add some tip entries first!</p>';
+        document.getElementById('bestDaysAnalysis').innerHTML = '<div class="no-data-analytics">No data available for best days analysis. Add some tip entries first!</div>';
         return;
     }
     
+    createBestDaysAnalysis();
     createDayOfWeekChart();
     createTimeChart();
+}
+
+function createBestDaysAnalysis() {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayTotals = {};
+    
+    // Initialize day totals
+    dayNames.forEach(day => {
+        dayTotals[day] = { total: 0, count: 0, entries: [] };
+    });
+    
+    // Calculate totals by day
+    tipEntries.forEach(entry => {
+        const dayOfWeek = new Date(entry.date).getDay();
+        const dayName = dayNames[dayOfWeek];
+        
+        if (currentAnalyticsView === 'tips') {
+            dayTotals[dayName].total += entry.breakdown.netTip;
+            dayTotals[dayName].entries.push(entry.breakdown.netTip);
+        } else {
+            // Calculate total hourly rate
+            const hoursWorked = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
+            const basePay = HOURLY_WAGE * PAID_HOURS_PER_DAY;
+            const totalPay = basePay + entry.breakdown.netTip;
+            const hourlyRate = totalPay / hoursWorked;
+            
+            dayTotals[dayName].total += hourlyRate;
+            dayTotals[dayName].entries.push(hourlyRate);
+        }
+        dayTotals[dayName].count += 1;
+    });
+    
+    // Sort days by average earnings (highest first)
+    const sortedDays = Object.entries(dayTotals)
+        .map(([day, data]) => ({
+            day,
+            average: data.count > 0 ? data.total / data.count : 0,
+            count: data.count,
+            total: data.total
+        }))
+        .sort((a, b) => b.average - a.average);
+    
+    // Generate HTML for best days analysis
+    const bestDaysHTML = sortedDays.map((dayData, index) => {
+        const isBestDay = index === 0 && dayData.count > 0;
+        const avgDisplay = dayData.average > 0 ? `$${dayData.average.toFixed(2)}` : '-';
+        const countDisplay = dayData.count > 0 ? `${dayData.count} shift${dayData.count !== 1 ? 's' : ''}` : 'No shifts';
+        
+        return `
+            <div class="day-stat-card ${isBestDay ? 'best-day' : ''}">
+                <div class="day-name">${dayData.day}</div>
+                <div class="day-average">${avgDisplay}</div>
+                <div class="day-count">${countDisplay}</div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('bestDaysAnalysis').innerHTML = bestDaysHTML;
 }
 
 function createDayOfWeekChart() {
@@ -837,7 +905,16 @@ function createDayOfWeekChart() {
     
     tipEntries.forEach(entry => {
         const dayOfWeek = new Date(entry.date).getDay();
-        dayTotals[dayOfWeek] += entry.breakdown.netTip;
+        if (currentAnalyticsView === 'tips') {
+            dayTotals[dayOfWeek] += entry.breakdown.netTip;
+        } else {
+            // Calculate total hourly rate (base wage + tips per hour)
+            const hoursWorked = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
+            const basePay = HOURLY_WAGE * PAID_HOURS_PER_DAY;
+            const totalPay = basePay + entry.breakdown.netTip;
+            const hourlyRate = totalPay / hoursWorked;
+            dayTotals[dayOfWeek] += hourlyRate;
+        }
         dayCounts[dayOfWeek] += 1;
     });
     
@@ -846,13 +923,21 @@ function createDayOfWeekChart() {
         dayCounts[index] > 0 ? total / dayCounts[index] : 0
     );
     
+    // Destroy existing chart if it exists
+    if (dayChart) {
+        dayChart.destroy();
+    }
+    
     const ctx = document.getElementById('dayChart').getContext('2d');
-    new Chart(ctx, {
+    const label = currentAnalyticsView === 'tips' ? 'Average Tips by Day' : 'Average Hourly Rate by Day';
+    const tooltipLabel = currentAnalyticsView === 'tips' ? 'Average Tips' : 'Average Hourly Rate';
+    
+    dayChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: dayNames,
             datasets: [{
-                label: 'Average Tips by Day',
+                label: label,
                 data: dayAverages,
                 backgroundColor: [
                     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
@@ -882,7 +967,7 @@ function createDayOfWeekChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `Average: $${context.parsed.y.toFixed(2)}`;
+                            return `${tooltipLabel}: $${context.parsed.y.toFixed(2)}`;
                         }
                     }
                 }
@@ -894,14 +979,36 @@ function createDayOfWeekChart() {
 function createTimeChart() {
     const sortedEntries = [...tipEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
     
+    // Destroy existing chart if it exists
+    if (timeChart) {
+        timeChart.destroy();
+    }
+    
     const ctx = document.getElementById('timeChart').getContext('2d');
-    new Chart(ctx, {
+    let data, label, tooltipLabel;
+    
+    if (currentAnalyticsView === 'tips') {
+        data = sortedEntries.map(entry => entry.breakdown.netTip);
+        label = 'Net Tips';
+        tooltipLabel = 'Tips';
+    } else {
+        data = sortedEntries.map(entry => {
+            const hoursWorked = entry.hours_worked && entry.hours_worked > 0 ? entry.hours_worked : DEFAULT_HOURS;
+            const basePay = HOURLY_WAGE * PAID_HOURS_PER_DAY;
+            const totalPay = basePay + entry.breakdown.netTip;
+            return totalPay / hoursWorked;
+        });
+        label = 'Total Hourly Rate';
+        tooltipLabel = 'Hourly Rate';
+    }
+    
+    timeChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: sortedEntries.map(entry => formatDateLocal(entry.date)),
             datasets: [{
-                label: 'Net Tips',
-                data: sortedEntries.map(entry => entry.breakdown.netTip),
+                label: label,
+                data: data,
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 borderWidth: 3,
@@ -929,7 +1036,7 @@ function createTimeChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `Tips: $${context.parsed.y.toFixed(2)}`;
+                            return `${tooltipLabel}: $${context.parsed.y.toFixed(2)}`;
                         }
                     }
                 }
@@ -941,46 +1048,4 @@ function createTimeChart() {
 // Dashboard Functions
 function showDashboard() {
     showView('dashboard');
-}
-
-function updatePayPeriodSummary() {
-    if (!currentUser) return;
-    
-    const select = document.getElementById('payPeriodSelect');
-    const isCurrentPeriod = select.value === 'current';
-    
-    const now = new Date();
-    let startDate, endDate;
-    
-    // Calculate pay period dates (1st-15th or 16th-end of month)
-    if (now.getDate() <= 15) {
-        // First half of month
-        if (isCurrentPeriod) {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-            endDate = new Date(now.getFullYear(), now.getMonth(), 15);
-        } else {
-            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 16);
-            endDate = new Date(now.getFullYear(), now.getMonth(), 0); // Last day of previous month
-        }
-    } else {
-        // Second half of month
-        if (isCurrentPeriod) {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 16);
-            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of current month
-        } else {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-            endDate = new Date(now.getFullYear(), now.getMonth(), 15);
-        }
-    }
-    
-    const periodEntries = tipEntries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= startDate && entryDate <= endDate;
-    });
-    
-    const periodTotal = periodEntries.reduce((sum, entry) => sum + entry.breakdown.netTip, 0);
-    
-    document.getElementById('payPeriodDates').textContent = 
-        `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
-    document.getElementById('payPeriodTotal').textContent = `$${periodTotal.toFixed(2)}`;
 }

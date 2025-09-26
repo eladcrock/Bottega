@@ -285,10 +285,6 @@
                         <h3>Total Average Hourly</h3>
                         <div class="stat-value" id="totalWages">$0</div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Best Day</h3>
-                        <div class="stat-value" id="bestDay">-</div>
-                    </div>
                 </div>
 
                 <div class="pay-period-section">
@@ -301,11 +297,34 @@
                                 <option value="previous">Previous Period</option>
                             </select>
                         </div>
+                        <div class="control-group">
+                            <label for="taxBracket">Tax & Payroll Deductions:</label>
+                            <select id="taxBracket" class="select-styled" onchange="updatePayPeriodSummary()">
+                                <option value="25" selected>25% - Typical CA Rate (Fed+State+Payroll)</option>
+                                <option value="22">22% - Lower Income Bracket</option>
+                                <option value="28">28% - Higher Income Bracket</option>
+                                <option value="32">32% - High Earner Rate</option>
+                                <option value="35">35% - Maximum Rate</option>
+                            </select>
+                        </div>
                         <div class="pay-period-dates">
                             <span id="payPeriodDates"></span>
                         </div>
                     </div>
-                    <div class="pay-period-total" id="payPeriodTotal">$0</div>
+                    <div class="pay-period-breakdown">
+                        <div class="pay-item">
+                            <span>Gross Pay:</span>
+                            <span id="payPeriodTotal">$0</span>
+                        </div>
+                        <div class="pay-item tax-item">
+                            <span>Tax & Payroll Deductions:</span>
+                            <span id="estimatedTax">$0</span>
+                        </div>
+                        <div class="pay-item net-pay">
+                            <span><strong>Estimated Net Pay:</strong></span>
+                            <span id="netPay"><strong>$0</strong></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -339,13 +358,28 @@
     <div id="analyticsView" class="view hidden">
         <div class="container">
             <h1>Analytics</h1>
+            <div class="analytics-controls">
+                <div class="toggle-group">
+                    <label>View:</label>
+                    <button id="tipsToggle" class="toggle-btn active" onclick="toggleAnalytics('tips')">Tips</button>
+                    <button id="hourlyToggle" class="toggle-btn" onclick="toggleAnalytics('hourly')">Total Hourly</button>
+                </div>
+            </div>
+            
+            <div class="best-days-section">
+                <h2>Best Days Analysis</h2>
+                <div id="bestDaysAnalysis" class="best-days-grid">
+                    <!-- Best days analysis will be populated here -->
+                </div>
+            </div>
+            
             <div class="charts-container">
                 <div class="chart-section">
-                    <h2>Tips by Day of Week</h2>
+                    <h2 id="dayChartTitle">Tips by Day of Week</h2>
                     <canvas id="dayChart"></canvas>
                 </div>
                 <div class="chart-section">
-                    <h2>Tips Over Time</h2>
+                    <h2 id="timeChartTitle">Tips Over Time</h2>
                     <canvas id="timeChart"></canvas>
                 </div>
             </div>
